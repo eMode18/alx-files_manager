@@ -5,6 +5,8 @@ const imageThumbnail = require('image-thumbnail');
 const dbClient = require('./utils/db');
 
 const fileQueue = new Queue('fileQueue', 'redis://127.0.0.1:6379');
+const userQueue = new Queue('userQueue', 'redis://127.0.0.1:6379');
+
 
 fileQueue.process(async (job, done) => {
     const { fileId, userId } = job.data;
@@ -36,3 +38,19 @@ fileQueue.process(async (job, done) => {
     }
 });
 
+
+userQueue.process(async (job, done) => {
+    const { userId } = job.data;
+
+    if (!userId) {
+        return done(new Error('Missing userId'));
+    }
+
+    const user = await dbClient.getUserById(userId);
+    if (!user) {
+        return done(new Error('User not found'));
+    }
+
+    console.log(`Welcome ${user.email}!`);
+    done();
+});

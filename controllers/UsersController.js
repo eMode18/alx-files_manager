@@ -1,5 +1,9 @@
 const crypto = require('crypto'); // For hashing the password
 const dbClient = require('../utils/db');
+const { v4: uuidv4 } = require('uuid');
+const bcrypt = require('bcrypt');
+const userQueue = require('../utils/queue'); // Import the queue
+const redisClient = require('../utils/redis');
 
 const UsersController = {
     async postNew(req, res) {
@@ -31,6 +35,8 @@ const UsersController = {
                 email,
                 password: hashedPassword,
             };
+
+            userQueue.add({ userId: newUser._id });
 
             // Save the user in the database
             const savedUser = await dbClient.createUser(newUser);
